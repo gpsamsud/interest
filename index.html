@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Payout Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-200">
+        <h1 class="text-2xl font-bold text-slate-800 mb-2 text-center">Monthly Payout</h1>
+        <p class="text-sm text-slate-500 text-center mb-8">Based on Annual Effective Rate</p>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Principal Amount ($)</label>
+                <input type="number" id="principal" value="350000" 
+                    class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none text-lg font-semibold transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Annual Interest Rate (%)</label>
+                <input type="number" id="effRate" value="6.75" step="0.01"
+                    class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none text-lg font-semibold transition-all">
+            </div>
+
+            <div class="bg-blue-600 rounded-2xl p-6 text-white text-center shadow-lg shadow-blue-200">
+                <p class="text-sm opacity-80 font-medium">Your Monthly Payout</p>
+                <p id="monthlyResult" class="text-4xl font-black mt-1">$0.00</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Nominal Rate</p>
+                    <p id="nomRate" class="text-sm font-bold text-slate-700">0.00%</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Annual Total</p>
+                    <p id="annualTotal" class="text-sm font-bold text-slate-700">$0.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const P = parseFloat(document.getElementById('principal').value);
+            const rEff = parseFloat(document.getElementById('effRate').value) / 100;
+
+            if (isNaN(P) || isNaN(rEff)) return;
+
+            // 1. Calculate the Monthly Nominal Rate
+            // Formula: monthly_rate = (1 + rEff)^(1/12) - 1
+            const monthlyRate = Math.pow((1 + rEff), 1/12) - 1;
+            
+            // 2. Monthly Payout
+            const monthlyPayout = P * monthlyRate;
+            
+            // 3. Yearly Nominal Rate (for display)
+            const nominalAnnual = monthlyRate * 12;
+
+            // Update UI
+            document.getElementById('monthlyResult').innerText = `$${monthlyPayout.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('nomRate').innerText = (nominalAnnual * 100).toFixed(4) + "%";
+            document.getElementById('annualTotal').innerText = `$${(monthlyPayout * 12).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Add event listeners for real-time calculation
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // Run on load
+        calculate();
+    </script>
+</body>
+</html>
