@@ -3,78 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Payout Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Smart Interest Calc</title>
+    <style>
+        :root { --primary: #2563eb; --secondary: #10b981; --bg: #f8fafc; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        .tab-container { display: flex; background: #eee; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 8px; font-size: 0.9rem; font-weight: 600; color: #666; transition: 0.3s; }
+        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #64748b; font-weight: 500; }
+        input { width: 100%; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 1rem; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); }
+        .result-box { background: #f0f7ff; padding: 20px; border-radius: 16px; text-align: center; margin-top: 10px; border: 1px solid #dbeafe; }
+        .res-label { font-size: 0.75rem; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .res-value { font-size: 2rem; color: #1e3a8a; margin: 5px 0; font-weight: 800; }
+        .hidden { display: none; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 border border-slate-200">
-        <h2 class="text-2xl font-bold text-slate-800 mb-2">Payout Calculator</h2>
-        <p class="text-slate-500 text-sm mb-6">Calculates monthly payouts using the Equivalent Monthly Rate method.</p>
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Deposit Amount ($)</label>
-                <input type="number" id="principal" value="350000" class="w-full p-3 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-lg">
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Annual Interest Rate (%)</label>
-                <input type="number" id="rate" value="6.75" step="0.01" class="w-full p-3 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-lg">
-            </div>
-        </div>
-
-        <div class="mt-8 bg-blue-600 rounded-xl p-6 text-white shadow-lg">
-            <p class="text-blue-100 text-sm uppercase tracking-wider font-semibold">Estimated Monthly Payout</p>
-            <div class="text-4xl font-bold mt-1">$<span id="payoutDisplay">1,958</span></div>
-            
-            <hr class="my-4 border-blue-400">
-            
-            <div class="grid grid-cols-2 gap-2 text-xs opacity-90">
-                <div>Quarterly Rate: <span id="qRate">1.6875</span>%</div>
-                <div>Monthly EMR: <span id="mRate">0.5594</span>%</div>
-            </div>
-        </div>
-
-        <p class="mt-4 text-[10px] text-slate-400 text-center italic">
-            Note: This formula assumes quarterly compounding discounted for monthly payouts.
-        </p>
+<div class="card">
+    <div class="tab-container">
+        <div id="tab1" class="tab active" onclick="switchMode('payout')">Find Payout</div>
+        <div id="tab2" class="tab" onclick="switchMode('rate')">Find Rate</div>
     </div>
 
-    <script>
-        const principalInput = document.getElementById('principal');
-        const rateInput = document.getElementById('rate');
-        const payoutDisplay = document.getElementById('payoutDisplay');
-        const qRateDisplay = document.getElementById('qRate');
-        const mRateDisplay = document.getElementById('mRate');
+    <div class="input-group">
+        <label>Principal Amount (₹)</label>
+        <input type="number" id="p" value="350000" oninput="calc()">
+    </div>
 
-        function calculate() {
-            const P = parseFloat(principalInput.value) || 0;
-            const r = (parseFloat(rateInput.value) || 0) / 100;
+    <div id="mode-payout">
+        <div class="input-group">
+            <label>Annual Interest Rate (%)</label>
+            <input type="number" id="r" value="6.71" step="0.01" oninput="calc()">
+        </div>
+        <div class="result-box">
+            <div class="res-label">Estimated Monthly Payout</div>
+            <div class="res-value" id="res-monthly">₹1,957</div>
+        </div>
+    </div>
 
-            if (P > 0 && r > 0) {
-                // 1. Quarterly Rate
-                const quarterlyRate = r / 4;
-                
-                // 2. Equivalent Monthly Rate (EMR)
-                // (1 + i_m)^3 = (1 + quarterlyRate)
-                const monthlyRate = Math.pow(1 + quarterlyRate, 1/3) - 1;
+    <div id="mode-rate" class="hidden">
+        <div class="input-group">
+            <label>Monthly Payout Received (₹)</label>
+            <input type="number" id="i" value="1958" oninput="calc()">
+        </div>
+        <div class="result-box" style="background: #ecfdf5; border-color: #d1fae5;">
+            <div class="res-label" style="color: #065f46;">Derived Annual Rate</div>
+            <div class="res-value" style="color: #064e3b;" id="res-rate">6.71%</div>
+        </div>
+    </div>
+</div>
 
-                // 3. Final Payout
-                const payout = P * monthlyRate;
+<script>
+    let currentMode = 'payout';
 
-                // Update UI
-                payoutDisplay.innerText = Math.round(payout).toLocaleString();
-                qRateDisplay.innerText = (quarterlyRate * 100).toFixed(4);
-                mRateDisplay.innerText = (monthlyRate * 100).toFixed(4);
-            } else {
-                payoutDisplay.innerText = "0";
+    function switchMode(mode) {
+        currentMode = mode;
+        document.getElementById('tab1').classList.toggle('active', mode === 'payout');
+        document.getElementById('tab2').classList.toggle('active', mode === 'rate');
+        document.getElementById('mode-payout').classList.toggle('hidden', mode === 'rate');
+        document.getElementById('mode-rate').classList.toggle('hidden', mode === 'payout');
+        calc();
+    }
+
+    function calc() {
+        const P = parseFloat(document.getElementById('p').value);
+        if (currentMode === 'payout') {
+            const R = parseFloat(document.getElementById('r').value);
+            if (P && R) {
+                const m = (P * R / 100) / 12;
+                document.getElementById('res-monthly').innerText = "₹" + Math.round(m).toLocaleString('en-IN');
+            }
+        } else {
+            const I = parseFloat(document.getElementById('i').value);
+            if (P && I) {
+                const r = (I * 12 * 100) / P;
+                document.getElementById('res-rate').innerText = r.toFixed(2) + "%";
             }
         }
+    }
+</script>
 
-        // Add listeners for real-time updates
-        principalInput.addEventListener('input', calculate);
-        rateInput.addEventListener('input', calculate);
-    </script>
 </body>
 </html>
